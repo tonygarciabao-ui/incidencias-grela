@@ -8,8 +8,13 @@
         body { background: #1a1a1a; color: #fff; font-family: Arial; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
         h1 { color: #ef4444; }
+        h2 { margin-top: 30px; }
         .card { background: #2d2d2d; padding: 20px; margin: 10px 0; border-left: 4px solid #ef4444; }
+        .card.alta { border-left-color: #ef4444; }
+        .card.media { border-left-color: #f59e0b; }
+        .card.baja { border-left-color: #10b981; }
         .loading { text-align: center; padding: 40px; }
+        .error { color: #fca5a5; }
     </style>
 </head>
 <body>
@@ -22,7 +27,7 @@
         </div>
     </div>
     <script>
-        const JSON_URL = 'https://estrellaga15002637.sharepoint.com/sites/EXPEDICIONES/_layouts/15/download.aspx?UniqueId=652cc8ec5ce9420896046f1f81de7e2e&e=O8UdjS';
+        const JSON_URL = 'https://estrellaga15002637.sharepoint.com/sites/EXPEDICIONES/_layouts/15/download.aspx?UniqueId=652cc8ec5ce9420896046f1f81de7e2e&e=jZQVr1';
         
         async function loadData() {
             try {
@@ -36,17 +41,18 @@
                 let html = '<h2>Total: ' + pendientes.length + ' pendientes</h2>';
                 
                 pendientes.forEach(item => {
+                    const prioridad = String(item.PRIORIDAD || '').toLowerCase();
                     html += `
-                        <div class="card">
+                        <div class="card ${prioridad}">
                             <strong>${item.CARRETILLA}</strong> - ${item.INCIDENCIA}
-                            <br><small>Usuario: ${item.USUARIO} | Prioridad: ${item.PRIORIDAD}</small>
+                            <br><small>Usuario: ${item.USUARIO} | Prioridad: ${item.PRIORIDAD} | Responsable: ${item['JJEE / AUX. DESC.']}</small>
                         </div>
                     `;
                 });
                 
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
-                document.getElementById('content').innerHTML = '<p>Error: ' + error.message + '</p>';
+                document.getElementById('content').innerHTML = '<p class="error">Error al cargar: ' + error.message + '</p>';
             }
         }
         

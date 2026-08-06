@@ -3,18 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Incidencias Pendientes</title>
+    <title>Incidencias Pendientes - A Grela</title>
     <style>
         body { background: #1a1a1a; color: #fff; font-family: Arial; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
         h1 { color: #ef4444; }
-        h2 { margin-top: 30px; }
-        .card { background: #2d2d2d; padding: 20px; margin: 10px 0; border-left: 4px solid #ef4444; }
+        h2 { margin-top: 30px; color: #aaa; font-size: 16px; }
+        .card { background: #2d2d2d; padding: 20px; margin: 10px 0; border-left: 4px solid #ef4444; border-radius: 8px; }
         .card.alta { border-left-color: #ef4444; }
         .card.media { border-left-color: #f59e0b; }
         .card.baja { border-left-color: #10b981; }
+        .carretilla { font-size: 20px; font-weight: bold; color: #fbbf24; }
+        .incidencia { margin: 8px 0; font-size: 16px; }
+        .info { font-size: 13px; color: #aaa; margin-top: 8px; }
         .loading { text-align: center; padding: 40px; }
         .error { color: #fca5a5; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 11px; text-transform: uppercase; margin-left: 10px; }
+        .badge.alta { background: rgba(239,68,68,0.3); color: #fca5a5; }
+        .badge.media { background: rgba(245,158,11,0.3); color: #fcd34d; }
+        .badge.baja { background: rgba(16,185,129,0.3); color: #86efac; }
     </style>
 </head>
 <body>
@@ -29,23 +36,50 @@
     <script>
         const JSON_URL = 'https://default4c49bed785da470cafc37735b371a3.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/24/workflows/f62cce79b444494aad955507360db643/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VSWqnfDZqHEbg9rOCYfYYKl3DPhroUBpsK0QDDIWcQA';
         
+        function getField(item, ...possibleNames) {
+            for (const name of possibleNames) {
+                if (item[name] !== undefined) return item[name];
+            }
+            // Buscar por coincidencia parcial (para nombres con codificación especial)
+            const keys = Object.keys(item);
+            for (const possibleName of possibleNames) {
+                const found = keys.find(k => k.toLowerCase().includes(possibleName.toLowerCase().substring(0, 5)));
+                if (found) return item[found];
+            }
+            return '';
+        }
+        
         async function loadData() {
             try {
                 const response = await fetch(JSON_URL);
                 const data = await response.json();
                 
-                const pendientes = data.datos.filter(item => 
-                    String(item['ESTADO REPARACION'] || '').toLowerCase() === 'pendiente'
-                );
+                const todos = data.datos || [];
+                
+                const pendientes = todos.filter(item => {
+                    const estado = String(getField(item, 'ESTADO REPARACION') || '').toLowerCase().trim();
+                    return estado === 'pendiente' || estado === '';
+                });
                 
                 let html = '<h2>Total: ' + pendientes.length + ' pendientes</h2>';
                 
+                if (pendientes.length === 0) {
+                    html += '<p>✅ Sin incidencias pendientes</p>';
+                }
+                
                 pendientes.forEach(item => {
-                    const prioridad = String(item.PRIORIDAD || '').toLowerCase();
+                    const prioridad = String(getField(item, 'PRIORIDAD') || '').toLowerCase();
+                    const carretilla = getField(item, 'CARRETILLA');
+                    const incidencia = getField(item, 'INCIDENCIA');
+                    const usuario = getField(item, 'USUARIO');
+                    const responsable = getField(item, 'JJEE', 'AUX');
+                    
                     html += `
                         <div class="card ${prioridad}">
-                            <strong>${item.CARRETILLA}</strong> - ${item.INCIDENCIA}
-                            <br><small>Usuario: ${item.USUARIO} | Prioridad: ${item.PRIORIDAD} | Responsable: ${item['JJEE / AUX. DESC.']}</small>
+                            <span class="carretilla">${carretilla}</span>
+                            <span class="badge ${prioridad}">${prioridad || 'sin prioridad'}</span>
+                            <div class="incidencia">${incidencia}</div>
+                            <div class="info">Usuario: ${usuario} ${responsable ? '| Responsable: ' + responsable : ''}</div>
                         </div>
                     `;
                 });
@@ -57,6 +91,7 @@
         }
         
         loadData();
+        setInterval(loadData, 60000);
     </script>
 </body>
 </html>

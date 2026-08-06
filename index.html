@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incidencias Pendientes</title>
+    <style>
+        body { background: #1a1a1a; color: #fff; font-family: Arial; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #ef4444; }
+        .card { background: #2d2d2d; padding: 20px; margin: 10px 0; border-left: 4px solid #ef4444; }
+        .loading { text-align: center; padding: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠️ PENDIENTES - A Grela</h1>
+        <div id="content">
+            <div class="loading">
+                <p>Cargando incidencias...</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        const JSON_URL = 'https://estrellaga15002637.sharepoint.com/sites/EXPEDICIONES/_layouts/15/download.aspx?UniqueId=652cc8ec5ce9420896046f1f81de7e2e&e=O8UdjS';
+        
+        async function loadData() {
+            try {
+                const response = await fetch(JSON_URL);
+                const data = await response.json();
+                
+                const pendientes = data.datos.filter(item => 
+                    String(item['ESTADO REPARACION'] || '').toLowerCase() === 'pendiente'
+                );
+                
+                let html = '<h2>Total: ' + pendientes.length + ' pendientes</h2>';
+                
+                pendientes.forEach(item => {
+                    html += `
+                        <div class="card">
+                            <strong>${item.CARRETILLA}</strong> - ${item.INCIDENCIA}
+                            <br><small>Usuario: ${item.USUARIO} | Prioridad: ${item.PRIORIDAD}</small>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                document.getElementById('content').innerHTML = '<p>Error: ' + error.message + '</p>';
+            }
+        }
+        
+        loadData();
+    </script>
+</body>
+</html>

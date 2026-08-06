@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug</title>
+    <style>
+        body { background: #1a1a1a; color: #fff; font-family: monospace; padding: 20px; font-size: 12px; }
+        .item { background: #2d2d2d; padding: 10px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>DEBUG - Estados encontrados</h1>
+    <div id="content">Cargando...</div>
+    <script>
+        const JSON_URL = 'https://default4c49bed785da470cafc37735b371a3.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/24/workflows/f62cce79b444494aad955507360db643/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VSWqnfDZqHEbg9rOCYfYYKl3DPhroUBpsK0QDDIWcQA';
+        
+        async function debug() {
+            const response = await fetch(JSON_URL);
+            const data = await response.json();
+            const todos = data.datos || [];
+            
+            // Mostrar las claves del primer objeto
+            let html = '<h2>Claves disponibles (primer registro):</h2>';
+            if (todos.length > 0) {
+                html += '<div class="item">' + Object.keys(todos[0]).join('<br>') + '</div>';
+            }
+            
+            // Mostrar valores únicos de ESTADO REPARACION
+            html += '<h2>Valores únicos de ESTADO REPARACION:</h2>';
+            const estados = [...new Set(todos.map(item => item['ESTADO REPARACION']))];
+            html += '<div class="item">' + estados.map(e => `"${e}"`).join('<br>') + '</div>';
+            
+            html += '<h2>Total registros: ' + todos.length + '</h2>';
+            
+            document.getElementById('content').innerHTML = html;
+        }
+        
+        debug();
+    </script>
+</body>
+</html>
